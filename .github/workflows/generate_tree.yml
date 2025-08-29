@@ -24,7 +24,7 @@ on:
         required: true
         default: ''
       GIT_EMAIL:
-        description: sirinaberriri
+        description: sirinaberriri@gmail.com
         required: true
         default: ''
 
