@@ -4,27 +4,27 @@ on:
   workflow_dispatch:
     inputs:
       DUMP_URL:
-        description: 'Dump link'
+        description: https://gitgud.io/Van-Firmware-Dumps/samsung/a56x.git
         required: true
         default: ''
       DUMP_BRANCH:
-        description: 'Dump branch'
+        description: a56xnsxx-user-15-AP3A.240905.015.A2-A566EXXU3AYDK-release-keys-6696
         required: true
         default: ''
       DEVICE_BRAND:
-        description: 'Device manufacturer'
+        description: Samsung
         required: true
         default: ''
       CODENAME:
-        description: 'Device codename'
+        description: a56b
         required: true
         default: ''
       GIT_NAME:
-        description: 'GitHub account user name'
+        description: Anouarberry
         required: true
         default: ''
       GIT_EMAIL:
-        description: 'GitHub account email adress'
+        description: sirinaberriri
         required: true
         default: ''
 
