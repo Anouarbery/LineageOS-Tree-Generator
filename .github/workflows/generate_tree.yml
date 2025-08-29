@@ -1,10 +1,90 @@
- 𝘴𝘶𝘥𝘰 𝘵𝘦𝘦 /𝘦𝘵𝘤/𝘢𝘱𝘵/𝘴𝘰𝘶𝘳𝘤𝘦𝘴.𝘭𝘪𝘴𝘵.𝘥/𝘨𝘪𝘵𝘩𝘶𝘣-𝘤𝘭𝘪.𝘭𝘪𝘴𝘵 > /𝘥𝘦𝘷/𝘯𝘶𝘭𝘭 \
-        && 𝘴𝘶𝘥𝘰 𝘢𝘱𝘵 𝘶𝘱𝘥𝘢𝘵𝘦 \
-        && 𝘴𝘶𝘥𝘰 𝘢𝘱𝘵 𝘪𝘯𝘴𝘵𝘢𝘭𝘭 𝘨𝘩 -𝘺
+name: Auto LineageOS Tree Generator
 
-    - 𝘯𝘢𝘮𝘦: 𝘊𝘭𝘰𝘯𝘪𝘯𝘨 𝘙𝘖𝘔 𝘋𝘶𝘮𝘱 
-      𝘪𝘥: 𝘤𝘭𝘰𝘯𝘦-𝘥𝘶𝘮𝘱
-      𝘳𝘶𝘯: mp=$(pwd)
+on:
+  workflow_dispatch:
+    inputs:
+      DUMP_URL:
+        description: 'Dump link'
+        required: true
+        default: 'https://gitgud.io/Van-Firmware-Dumps/samsung/a56x'
+      DUMP_BRANCH:
+        description: 'Dump branch'
+        required: true
+        default: 'a56xnsxx-user-15-AP3A.240905.015.A2-A566EXXU3AYDK-release-keys-6696'
+      DEVICE_BRAND:
+        description: 'Device manufacturer'
+        required: true
+        default: 'Samsung'
+      CODENAME:
+        description: 'Device codename'
+        required: true
+        default: 'a56b'
+      GIT_NAME:
+        description: 'GitHub account user name'
+        required: true
+        default: 'Anouarberry'
+      GIT_EMAIL:
+        description: 'GitHub account email adress'
+        required: true
+        default: 'sirinaberriri@gmail.com'
+
+jobs:
+  gen-tree:
+    name: Create LineageOS compatible tree
+    if: github.event.repository.owner.id == github.event.sender.id
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.LOS }}
+      DU: ${{ github.event.inputs.DUMP_URL }}
+      DB: ${{ github.event.inputs.DEVICE_BRAND}}
+      DUB: ${{ github.event.inputs.DUMP_BRANCH }}
+      CN: ${{ github.event.inputs.CODENAME }}
+      GN: ${{ github.event.inputs.GIT_NAME }}
+      GE: ${{ github.event.inputs.GIT_EMAIL }}
+
+    permissions:
+      contents: write
+    steps:
+    - name: Check Out
+      if: check-out
+      uses: actions/checkout@v4
+
+    - name: Update and install required packages
+      id: setting-up
+      run: |
+        sudo apt update 
+        sudo apt upgrade -y
+        sudo apt install cpio python3 git -y
+
+    - name: Setup GitHub CLI
+      id: setup-gh
+      run: |
+        type -p curl >/dev/null || (sudo apt update && sudo apt install curl -y)
+        curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && sudo chmod go+r /usr/share/keyrings/githubcli-archive-keyring.gpg \
+        && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null \
+        && sudo apt update \
+        && sudo apt install gh -y
+
+    - name: Cloning ROM Dump 
+      id: clone-dump
+      run: |
+        cd /home
+        sudo mkdir LOS-Generator
+        sudo chmod 777 LOS-Generator
+        cd LOS-Generator
+        git clone ${{ env.DU }} -b ${{ env.DUB }}
+
+    - name: Installing AOSPDTGEN
+      id: setup-aosp-dtgen
+      run: |
+        pip3 install aospdtgen
+
+    - name: Creating LineageOS Tree
+      id: gen-dt
+      run: |
+        cd /home/LOS-Generator/*
+        working_dump=$(pwd)
         python3 -m aospdtgen $working_dump
         echo "Successful!"
         mv $working_dump/output /home/LOS-Generator
